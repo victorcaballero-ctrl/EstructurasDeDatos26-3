@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "Nodo.h"
+#include "ConsoleUI.h"
 
 int main()
 {
