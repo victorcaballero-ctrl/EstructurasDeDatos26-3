@@ -97,14 +97,27 @@ AVLTree<T>::AVLTree()
 template <class T>
 AVLTree<T>::~AVLTree()
 {
-    // TODO: llamar a DestruirRec desde la raiz
+    DestruirRec(_root);
+
+    _root = nullptr;
+    _size = 0;
 }
 
 template <class T>
 void AVLTree<T>::DestruirRec(Node* n)
 {
-    // TODO: destruir primero los hijos y HASTA EL FINAL el nodo actual.
-    // Igual que en tu Tree: ese orden es el post-orden.
+    if (n == nullptr)
+    {
+        return;
+    }
+
+    // Post-orden:
+    // primero hijos, después nodo actual.
+
+    DestruirRec(n->left);
+    DestruirRec(n->right);
+
+    delete n;
 }
 
 
@@ -117,28 +130,44 @@ void AVLTree<T>::DestruirRec(Node* n)
 template <class T>
 int AVLTree<T>::Altura(Node* n)
 {
-    // TODO: regresar la altura GUARDADA en el nodo, o 0 si es nulo.
-    //
-    // Fijate que NO la recalcula recorriendo el arbol: la lee del campo
-    // height. Por eso es O(1), y por eso es tan importante mantener ese
-    // campo actualizado.
-    return 0;
+    if (n == nullptr)
+    {
+        return 0;
+    }
+
+    return n->height;
 }
 
 template <class T>
 int AVLTree<T>::FactorBalance(Node* n)
 {
-    // TODO: altura(izquierda) - altura(derecha). Un nodo nulo da 0.
-    //
-    // Positivo = cargado a la izquierda.
-    // Negativo = cargado a la derecha.
-    return 0;
+    if (n == nullptr)
+    {
+        return 0;
+    }
+
+    return Altura(n->left) - Altura(n->right);
 }
 
 template <class T>
 void AVLTree<T>::ActualizarAltura(Node* n)
 {
-    // TODO: la altura de n es 1 mas que la del MAS ALTO de sus dos hijos.
+    if (n == nullptr)
+    {
+        return;
+    }
+
+    int alturaIzquierda = Altura(n->left);
+    int alturaDerecha = Altura(n->right);
+
+    if (alturaIzquierda > alturaDerecha)
+    {
+        n->height = alturaIzquierda + 1;
+    }
+    else
+    {
+        n->height = alturaDerecha + 1;
+    }
 }
 
 
@@ -158,56 +187,83 @@ void AVLTree<T>::ActualizarAltura(Node* n)
 template <class T>
 typename AVLTree<T>::Node* AVLTree<T>::RotarDerecha(Node* n)
 {
-    // TODO: el hijo izquierdo de n sube a ocupar su lugar, y n baja a
-    // ser su hijo derecho. El subarbol que estorba se reacomoda.
-    //
-    // CUIDADO CON EL ORDEN DE LAS ALTURAS: primero actualiza la del nodo
-    // que BAJO, despues la del que SUBIO. Si lo haces al reves, las
-    // alturas quedan mal y el arbol se desbalancea sin que te des
-    // cuenta. Este es EL error mas comun del AVL.
-    //
-    // Regresa el nodo que quedo arriba.
-    return n;
+    Node* nuevoArriba = n->left;
+
+    Node* subarbolIntermedio = nuevoArriba->right;
+    // x sube
+    nuevoArriba->right = n;
+    // B cambia de padre
+    n->left = subarbolIntermedio;
+
+    ActualizarAltura(n);
+
+    ActualizarAltura(nuevoArriba);
+
+    return nuevoArriba;
 }
 
 template <class T>
 typename AVLTree<T>::Node* AVLTree<T>::RotarIzquierda(Node* n)
 {
-    // TODO: el espejo exacto de RotarDerecha.
-    return n;
+    Node* nuevoArriba = n->right;
+
+    Node* subarbolIntermedio = nuevoArriba->left;
+
+    // El hijo derecho sube.
+    nuevoArriba->left = n;
+
+    // El subárbol intermedio cambia de padre.
+    n->right = subarbolIntermedio;
+
+    ActualizarAltura(n);
+
+    ActualizarAltura(nuevoArriba);
+
+    return nuevoArriba;
 }
 
 template <class T>
 typename AVLTree<T>::Node* AVLTree<T>::Balancear(Node* n)
 {
-    // TODO: actualiza la altura de n, calcula su factor de balance, y
-    // si esta desbalanceado aplica la correccion que corresponda.
-    //
-    // Hay CUATRO casos, pero solo DOS rotaciones. Los otros dos casos
-    // son combinaciones:
-    //
-    //   IZQUIERDA-IZQUIERDA (LL): n cargado a la izquierda, y su hijo
-    //       izquierdo TAMBIEN cargado a la izquierda.
-    //       -> una sola rotacion.
-    //
-    //   DERECHA-DERECHA (RR): el espejo del anterior.
-    //       -> una sola rotacion, en el otro sentido.
-    //
-    //   IZQUIERDA-DERECHA (LR): n cargado a la izquierda, pero su hijo
-    //       izquierdo cargado a la DERECHA. Una sola rotacion no lo
-    //       arregla: lo deja desbalanceado del otro lado.
-    //       -> DOS rotaciones.
-    //
-    //   DERECHA-IZQUIERDA (RL): el espejo del anterior.
-    //       -> DOS rotaciones.
-    //
-    // Para distinguirlos necesitas el factor de balance de n Y el de su
-    // hijo del lado cargado.
-    //
-    // Regresa el nodo que quedo arriba (si no hubo rotacion, es el mismo
-    // que entro).
+    if (n == nullptr)
+    {
+        return nullptr;
+    }
+
+    ActualizarAltura(n);
+
+    int factor = FactorBalance(n);
+
+    // Desbalance hacia la izquierda
+    if (factor > 1)
+    {
+        // Caso LR
+        if (FactorBalance(n->left) < 0)
+        {
+            n->left = RotarIzquierda(n->left);
+        }
+
+        // Caso LL o segunda rotacion del LR
+        return RotarDerecha(n);
+    }
+
+    // Desbalance hacia la derecha
+    if (factor < -1)
+    {
+        // Caso RL
+        if (FactorBalance(n->right) > 0)
+        {
+            n->right = RotarDerecha(n->right);
+        }
+
+        // Caso RR o segunda rotacion del RL
+        return RotarIzquierda(n);
+    }
+
+    // Si ya estaba balanceado, regresa el mismo nodo
     return n;
 }
+
 
 
 // ---------------------------------------------------------------------
@@ -217,30 +273,45 @@ typename AVLTree<T>::Node* AVLTree<T>::Balancear(Node* n)
 template <class T>
 void AVLTree<T>::Insert(T valor)
 {
-    // TODO: arrancar la recursion y GUARDAR el resultado en _root.
-    // Ese "guardar" es importante: si la raiz rota, _root cambia.
+    _root = InsertRec(_root, valor);
 }
 
 template <class T>
 typename AVLTree<T>::Node* AVLTree<T>::InsertRec(Node* n, T valor)
 {
-    // TODO: la estructura es la misma de tu BST (bajar a la izquierda o
-    // a la derecha segun la comparacion, no admitir duplicados), con dos
-    // diferencias:
-    //
-    //   1. Guarda el resultado de la llamada recursiva:
-    //          n->left = InsertRec(n->left, valor);
-    //
-    //   2. Al REGRESAR de la recursion, llama a Balancear(n) y regresa
-    //      lo que te de.
-    //
-    // Ese "al regresar" es lo mismo que ya hiciste con PrintReverse y
-    // con el post-orden: la accion ocurre cuando la recursion se
-    // devuelve, no cuando baja.
-    //
-    // El nodo nuevo nace con altura 1.
-    return n;
+    if (n == nullptr)
+    {
+        Node* nuevo = new Node;
+
+        nuevo->data = valor;
+
+        nuevo->left = nullptr;
+        nuevo->right = nullptr;
+
+        nuevo->height = 1;
+
+        _size++;
+
+        return nuevo;
+    }
+    if (valor < n -> data)
+    {
+        n -> left = InsertRec(n -> left, valor);
+    }
+
+    else if (valor > n->data)
+    {
+        n->right = InsertRec(n -> right, valor);
+    }
+
+    else
+    {
+        return n;
+    }
+
+    return Balancear(n);
 }
+
 
 
 // ---------------------------------------------------------------------
@@ -250,49 +321,66 @@ typename AVLTree<T>::Node* AVLTree<T>::InsertRec(Node* n, T valor)
 template <class T>
 bool AVLTree<T>::Contains(T valor)
 {
-    // TODO
-    return false;
+    return ContainsRec(_root, valor);
 }
 
 template <class T>
 bool AVLTree<T>::ContainsRec(Node* n, T valor)
 {
-    // TODO: igual que en tu BST. El balanceo no cambia como se busca,
-    // solo garantiza que la busqueda sea corta.
-    return false;
+    if (n == nullptr)
+    {
+        return false;
+    }
+
+
+    if (valor == n->data)
+    {
+        return true;
+    }
+
+
+    if (valor < n->data)
+    {
+        return ContainsRec(n -> left, valor);
+    }
+
+    return ContainsRec(n -> right, valor);
 }
+
 
 template <class T>
 int AVLTree<T>::GetSize()
 {
-    // TODO
-    return 0;
+    return _size;
 }
 
 template <class T>
 int AVLTree<T>::GetAltura()
 {
-    // TODO: la altura del arbol completo.
-    return 0;
+    return Altura(_root);
 }
 
 template <class T>
 bool AVLTree<T>::EstaBalanceado()
 {
-    // TODO
-    return true;
+    return BalanceadoRec(_root);
 }
 
 template <class T>
 bool AVLTree<T>::BalanceadoRec(Node* n)
 {
-    // TODO: un nodo nulo esta balanceado. Si no, su factor debe estar
-    // entre -1 y 1, Y sus dos hijos tambien deben estar balanceados.
-    //
-    // Esta funcion es tu DETECTOR: llamala despues de cada insercion
-    // mientras depuras. En cuanto regrese false, la insercion que
-    // acabas de hacer es la que rompio algo.
-    return true;
+    if (n == nullptr)
+    {
+        return true;
+    }
+
+    int factor = FactorBalance(n);
+
+    if (factor < -1 || factor > 1)
+    {
+        return false;
+    }
+    return BalanceadoRec(n->left) && BalanceadoRec(n->right);
 }
 
 
@@ -303,21 +391,54 @@ bool AVLTree<T>::BalanceadoRec(Node* n)
 template <class T>
 void AVLTree<T>::InOrden(LinkedList<T>& resultado)
 {
-    // TODO
+    InRec(_root, resultado);
 }
 
 template <class T>
 void AVLTree<T>::InRec(Node* n, LinkedList<T>& resultado)
 {
-    // TODO: izquierda, nodo, derecha. En un arbol de busqueda sale
-    // ordenado, y eso es tu mejor verificacion: si tu in-orden sale
-    // desordenado, alguna rotacion esta moviendo un puntero al lado
-    // equivocado.
+    if (n == nullptr)
+    {
+        return;
+    }
+
+    InRec(n -> left, resultado);
+
+    resultado.Add(n->data);
+
+    InRec(n -> right, resultado);
 }
 
 template <class T>
 void AVLTree<T>::Print()
 {
-    // TODO: usa el recorrido in-orden y ConsoleUI. Casi todo el trabajo
-    // ya lo hiciste: aqui solo lo conectas.
+    LinkedList<T> resultado; 
+
+    InOrden(resultado); 
+
+    ConsoleUI::PrintTitle("AVL TREE - RECORRIDO IN-ORDEN");
+
+
+    std::ostringstream salida;
+
+
+    if (resultado.GetSize() == 0)
+    {
+        salida << "(vacio)";
+    }
+    else
+    {
+        for (int i = 0; i < resultado.GetSize(); i++)
+        {
+            salida << resultado.GetAt(i);
+
+            if (i < resultado.GetSize() - 1)
+            {
+                salida << ", ";
+            }
+        }
+    }
+
+
+    ConsoleUI::PrintColor(salida.str(),ConsoleUI::COLOR_CYAN);
 }

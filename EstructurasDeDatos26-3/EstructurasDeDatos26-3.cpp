@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <sstream>
 
 #include "ConsoleUI.h"
 #include "TNode.h"
@@ -15,12 +16,15 @@
 #include "LinkedList.h"
 #include "Grid.h"
 #include "Tests.h"
+#include "Tree.h"
+#include "AVLTree.h"
 
 void MenuPruebas();
 void DemoStack();
 void DemoColas();
 void DemoLista();
 void DemoGrid();
+void DemoAVL();
 
 int main()
 {
@@ -36,6 +40,7 @@ int main()
         std::cout << "2.- Demo Colas (LinkedQueue vs TwoStackQueue)" << std::endl;
         std::cout << "3.- Demo Lista Ligada" << std::endl;
         std::cout << "4.- Demo Grid / Flood Fill" << std::endl;
+        std::cout << "5.- Demo BST vs AVL" << std::endl;
         ConsoleUI::PrintSeparator();
         std::cout << "8.- Correr TODAS las pruebas" << std::endl;
         std::cout << "9.- Correr pruebas de un grupo" << std::endl;
@@ -59,6 +64,7 @@ int main()
         case 2: DemoColas();  break;
         case 3: DemoLista();  break;
         case 4: DemoGrid();   break;
+        case 5: DemoAVL();    break;
 
         case 8: CorrerTodasLasPruebas(); break;
         case 9: MenuPruebas();           break;
@@ -93,6 +99,7 @@ void MenuPruebas()
     std::cout << "5.- Recursividad" << std::endl;
     std::cout << "6.- Grid" << std::endl;
     std::cout << "7.- Memoria" << std::endl;
+    std::cout << "8.- AVL" << std::endl;
     std::cout << "Elige un grupo: ";
     std::cin >> grupo;
 
@@ -113,6 +120,7 @@ void MenuPruebas()
     case 5: CorrerPruebasDe("Recursividad"); break;
     case 6: CorrerPruebasDe("Grid");         break;
     case 7: CorrerPruebasDe("Memoria");      break;
+    case 8: CorrerPruebasDe("AVL");          break;
     default: ConsoleUI::PrintError("Grupo invalido."); break;
     }
 }
@@ -264,6 +272,102 @@ void DemoGrid()
     {
         ConsoleUI::PrintColor("Muy pocas: no formaria combinacion.", ConsoleUI::COLOR_AMARILLO);
     }
+
+    ConsoleUI::Pause();
+}
+void DemoAVL()
+{
+    std::cout << std::endl;
+
+    ConsoleUI::PrintTitle("COMPARACION BST VS AVL", 45);
+
+    Tree<int> bst;
+    AVLTree<int> avl;
+
+    for (int i = 1; i <= 15; i++)
+    {
+        bst.Insert(i);
+        avl.Insert(i);
+    }
+
+    ConsoleUI::PrintColor("ALTURAS DE LOS ARBOLES", ConsoleUI::COLOR_AMARILLO);
+
+    std::ostringstream textoBST;
+
+    textoBST  << "BST normal - altura: " << bst.GetAltura();
+
+
+    ConsoleUI::PrintColor(   textoBST.str(), ConsoleUI::COLOR_ROJO);
+
+
+    std::ostringstream textoAVL;
+
+    textoAVL << "AVL - altura: " << avl.GetAltura();
+
+
+    ConsoleUI::PrintColor(textoAVL.str(),  ConsoleUI::COLOR_VERDE);
+
+
+    ConsoleUI::PrintSeparator();
+
+    LinkedList<int> recorridoBST;
+    LinkedList<int> recorridoAVL;
+
+
+    bst.InOrden(recorridoBST);
+    avl.InOrden(recorridoAVL);
+
+    std::ostringstream salidaBST;
+
+    salidaBST << "BST In-Orden: ";
+
+
+    for (int i = 0; i < recorridoBST.GetSize(); i++)
+    {
+        salidaBST << recorridoBST.GetAt(i);
+
+        if (i < recorridoBST.GetSize() - 1)
+        {
+            salidaBST << ", ";
+        }
+    }
+
+    ConsoleUI::PrintColor(salidaBST.str(), ConsoleUI::COLOR_CYAN);
+
+    std::ostringstream salidaAVL;
+
+    salidaAVL << "AVL In-Orden: ";
+
+
+    for (int i = 0; i < recorridoAVL.GetSize(); i++)
+    {
+        salidaAVL << recorridoAVL.GetAt(i);
+
+        if (i < recorridoAVL.GetSize() - 1)
+        {
+            salidaAVL << ", ";
+        }
+    }
+
+    ConsoleUI::PrintColor(salidaAVL.str(), ConsoleUI::COLOR_CYAN);
+
+    ConsoleUI::PrintSeparator();
+
+    if (avl.EstaBalanceado())
+    {
+        ConsoleUI::PrintSuccess("El AVL esta balanceado.");
+    }
+    else
+    {
+        ConsoleUI::PrintError("El AVL NO esta balanceado.");
+    }
+
+
+    ConsoleUI::PrintColor("Resultado esperado: BST altura 15 y AVL altura 4.", ConsoleUI::COLOR_AMARILLO);
+
+
+    ConsoleUI::PrintColor("Los dos recorridos In-Orden deben contener del 1 al 15.", ConsoleUI::COLOR_AMARILLO);
+
 
     ConsoleUI::Pause();
 }
